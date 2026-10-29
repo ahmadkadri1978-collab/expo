@@ -1,3 +1,57 @@
+Lib/screens/homes_screen.dart
+import 'package:flutter/material.dart';
+import 'drivers_list_screen.dart';
+import 'favorites_screen.dart';
+import 'search_screen.dart';
+import 'settings_screen.dart';
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final tiles = [
+      _Tile(Icons.people, 'كل السائقين', () => const DriversListScreen()),
+      _Tile(Icons.star, 'المفضلة', () => const FavoritesScreen()),
+      _Tile(Icons.search, 'بحث', () => const SearchScreen()),
+      _Tile(Icons.settings, 'الإعدادات', () => const SettingsScreen()),
+    ];
+    return Scaffold(
+      appBar: AppBar(title: const Text('الرئيسية'), centerTitle: true),
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(16),
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        children: tiles
+            .map((t) => Card(
+                  child: InkWell(
+                    onTap: t.onTap,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(t.icon,
+                              size: 56,
+                              color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(height: 12),
+                          Text(t.label, style: const TextStyle(fontSize: 18)),
+                        ]),
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _Tile {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  _Tile(this.icon, this.label, this.onTap);
+}
+
 Lib/screens/splash/screens.dart
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
