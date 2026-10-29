@@ -1,3 +1,121 @@
+lib/screen/driver_ditails_screen.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import '../models/driver.dart';
+import '../db/database_helper.dart';
+import 'add_edit_driver_screen.dart';
+import 'share_card_screen.dart';
+
+class DriverDetailsScreen extends StatelessWidget {
+  final Driver driver;
+  const DriverDetailsScreen({super.key, required this.driver});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(driver.fullName), actions: [
+          IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => ShareCardScreen(driver: driver)))),
+          IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            AddEditDriverScreen(driver: driver)));
+                if (context.mounted) Navigator.pop(context);
+              }),
+          IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () async {
+                final ok = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                          title: const Text('حذف؟'),
+                          content: const Text('هل تريد حذف هذا السائق؟'),
+                          actions: [
+                            TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, false),
+                                child: const Text('إلغاء')),
+                            TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, true),
+                                child: const Text('حذف')),
+                          ],
+                        ));
+                if (ok == true) {
+                  await DatabaseHelper.instance.delete(driver.id!);
+                  if (context.mounted) Navigator.pop(context);
+                }
+              }),
+        ]),
+        body: ListView(padding: const EdgeInsets.all(16), children: [
+          Center(
+              child: CircleAvatar(
+                  radius: 60,
+                  backgroundImage: driver.photoPath != null
+                      ? FileImage(File(driver.photoPath!))
+                      : null,
+                  child: driver.photoPath == null
+                      ? const Icon(Icons.person, size: 60)
+                      : null)),
+          const SizedBox(height: 16),
+          Center(
+              child: Text(driver.fullName,
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold))),
+          const SizedBox(height: 8),
+          Center(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+            ...List.generate(
+                5,
+                (i) => Icon(
+                    i < driver.rating.round()
+                        ? Icons.star
+                        : Icons.star_border,
+                    color: Colors.amber))
+          ])),
+          const Divider(height: 32),
+          _row(Icons.directions_car, 'رقم اللوحة', driver.plateNumber),
+          _row(Icons.phone, 'الهاتف',
+              driver.hidePhone ? '•••• ••••' : driver.phone),
+          if (driver.notes != null && driver.notes!.isNotEmpty)
+            _row(Icons.notes, 'ملاحظات', driver.notes!),
+          if (driver.carPhotoPath != null) ...[
+            const SizedBox(height: 16),
+            const Text('صورة السيارة',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(File(driver.carPhotoPath!),
+                    height: 200, fit: BoxFit.cover)),
+          ],
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => ShareCardScreen(driver: driver))),
+            icon: const Icon(Icons.share),
+            label: const Text('مشاركة بطاقة السائق'),
+          ),
+        ]),
+      );
+
+  Widget _row(IconData i, String label, String value) => ListTile(
+        leading: Icon(i, color: Colors.indigo),
+        title: Text(label,
+            style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        subtitle: Text(value, style: const TextStyle(fontSize: 16)),
+      );
+}
+
 lib/screen/add_edit_driver_screen.art
 import 'dart:io';
 import 'package:flutter/material.dart';
