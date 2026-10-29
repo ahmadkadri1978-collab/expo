@@ -1,4 +1,60 @@
+
 Lib/db/database/helper.dart
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import '../models/driver.dart';
+
+class DatabaseHelper {
+  static final DatabaseHelper instance = DatabaseHelper._();
+  DatabaseHelper._();
+  static Database? _db;
+
+  Future<Database> get db async {
+    _db ??= await _init();
+    return _db!;
+  }
+
+  Future<Database> _init() async {
+    final path = join(await getDatabasesPath(), 'drivers.db');
+    return openDatabase(path, version: 1, onCreate: (db, v) async {
+      await db.execute('''
+        CREATE TABLE drivers(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          firstName TEXT, lastName TEXT,
+          photoPath TEXT, carPhotoPath TEXT,
+          plateNumber TEXT, phone TEXT,
+          hidePhone INTEGER, rating REAL,
+          isFavorite INTEGER, notes TEXT, createdAt TEXT
+        )
+      ''');
+    });
+  }
+
+  Future<int> insert(Driver d) async =>
+      (await db).insert('drivers', d.toMap());
+
+  Future<int> update(Driver d) async =>
+      (await db).update('drivers', d.toMap(), where: 'id=?', whereArgs: [d.id]);
+
+  Future<int> delete(int id) async =>
+      (await db).delete('drivers', where: 'id=?', whereArgs: [id]);
+
+  Future<List<Driver>> all({String? query, bool onlyFav = false}) async {
+    String? where;
+    List<dynamic> args = [];
+    if (onlyFav) where = 'isFavorite=1';
+    if (query != null && query.isNotEmpty) {
+      final q = '%$query%';
+      final cond =
+          '(firstName LIKE ? OR lastName LIKE ? OR plateNumber LIKE ? OR phone LIKE ?)';
+      where = where == null ? cond : '$where AND $cond';
+      args = [q, q, q, q];
+    }
+    final rows = await (await db).query('drivers',
+        where: where, whereArgs: args, orderBy: 'firstName ASC');
+    return rows.map(Driver.fromMap).toList();
+  }
+}
 Lib/models/driver.dart
 class Driver {
   int? id;
