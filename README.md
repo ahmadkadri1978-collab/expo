@@ -1,3 +1,39 @@
+lib/screens/settings_screen.dart
+import 'package:flutter/material.dart';
+import 'about_screen.dart';
+
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _darkMode = false;
+  bool _hidePhonesByDefault = false;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('الإعدادات')),
+        body: ListView(children: [
+          SwitchListTile(
+              title: const Text('الوضع الليلي'),
+              value: _darkMode,
+              onChanged: (v) => setState(() => _darkMode = v)),
+          SwitchListTile(
+              title: const Text('إخفاء الهاتف افتراضياً'),
+              value: _hidePhonesByDefault,
+              onChanged: (v) => setState(() => _hidePhonesByDefault = v)),
+          ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('حول التطبيق'),
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AboutScreen()))),
+        ]),
+      );
+}
 lib/screen/favorites_screen.dart
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
