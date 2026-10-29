@@ -1,6 +1,58 @@
 github/workflows/build.yml
 .github/workflows/build.yml
+name: Build APK
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Create fresh Flutter project
+        run: |
+          flutter create --org com.drivers --project-name drivers_app temp_app
+          rm -rf temp_app/lib
+          cp -r lib temp_app/lib
+          cp pubspec.yaml temp_app/pubspec.yaml
+
+      - name: Add permissions to AndroidManifest
+        run: |
+          MANIFEST=temp_app/android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i\    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>' $MANIFEST
+
+      - name: Install dependencies
+        working-directory: temp_app
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: temp_app
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: drivers-app-apk
+          path: temp_app/build/app/outputs/flutter-apk/app-release.apk
 lib/screen/about_screen.dart
 import 'package:flutter/material.dart';
 
