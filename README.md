@@ -1,3 +1,59 @@
+lib/screen/srsh_screen.dart
+import 'package:flutter/material.dart';
+import '../db/database_helper.dart';
+import '../models/driver.dart';
+import 'driver_details_screen.dart';
+
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  final _c = TextEditingController();
+  List<Driver> _results = [];
+
+  Future<void> _search(String q) async {
+    final r = await DatabaseHelper.instance.all(query: q);
+    if (mounted) setState(() => _results = r);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('بحث')),
+        body: Column(children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _c,
+              autofocus: true,
+              decoration: const InputDecoration(
+                  hintText: 'الاسم، اللوحة، الهاتف...',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder()),
+              onChanged: _search,
+            ),
+          ),
+          Expanded(
+              child: ListView.builder(
+            itemCount: _results.length,
+            itemBuilder: (_, i) {
+              final d = _results[i];
+              return ListTile(
+                title: Text(d.fullName),
+                subtitle: Text('${d.plateNumber} • ${d.phone}'),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => DriverDetailsScreen(driver: d))),
+              );
+            },
+          )),
+        ]),
+      );
+}
+
 lib/screen/driver_ditails_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
