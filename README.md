@@ -1,3 +1,53 @@
+lib/screen/favorites_screen.dart
+import 'package:flutter/material.dart';
+import '../db/database_helper.dart';
+import '../models/driver.dart';
+import 'driver_details_screen.dart';
+
+class FavoritesScreen extends StatefulWidget {
+  const FavoritesScreen({super.key});
+  @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  List<Driver> _favs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final data = await DatabaseHelper.instance.all(onlyFav: true);
+    if (mounted) setState(() => _favs = data);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('المفضلة')),
+        body: _favs.isEmpty
+            ? const Center(child: Text('لا يوجد سائقون في المفضلة'))
+            : ListView.builder(
+                itemCount: _favs.length,
+                itemBuilder: (_, i) => ListTile(
+                  leading: const Icon(Icons.star, color: Colors.amber),
+                  title: Text(_favs[i].fullName),
+                  subtitle: Text(_favs[i].plateNumber),
+                  onTap: () async {
+                    await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                DriverDetailsScreen(driver: _favs[i])));
+                    _load();
+                  },
+                ),
+              ),
+      );
+}
+
 lib/screen/share_card_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
