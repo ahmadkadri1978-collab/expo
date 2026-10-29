@@ -1,4 +1,164 @@
-libs/screens/drivers_list_screens.dart
+lib/screen/add_edit_driver_screen.art
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../db/database_helper.dart';
+import '../models/driver.dart';
+
+class AddEditDriverScreen extends StatefulWidget {
+  final Driver? driver;
+  const AddEditDriverScreen({super.key, this.driver});
+  @override
+  State<AddEditDriverScreen> createState() => _AddEditDriverScreenState();
+}
+
+class _AddEditDriverScreenState extends State<AddEditDriverScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _fn, _ln, _plate, _phone, _notes;
+  String? _photo, _carPhoto;
+  bool _hidePhone = false;
+  double _rating = 0;
+  bool _isFav = false;
+  final _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    final d = widget.driver;
+    _fn = TextEditingController(text: d?.firstName ?? '');
+    _ln = TextEditingController(text: d?.lastName ?? '');
+    _plate = TextEditingController(text: d?.plateNumber ?? '');
+    _phone = TextEditingController(text: d?.phone ?? '');
+    _notes = TextEditingController(text: d?.notes ?? '');
+    _photo = d?.photoPath;
+    _carPhoto = d?.carPhotoPath;
+    _hidePhone = d?.hidePhone ?? false;
+    _rating = d?.rating ?? 0;
+    _isFav = d?.isFavorite ?? false;
+  }
+
+  Future<void> _pick(bool isDriver) async {
+    final x = await _picker.pickImage(
+        source: ImageSource.gallery, imageQuality: 75);
+    if (x != null) {
+      setState(() => isDriver ? _photo = x.path : _carPhoto = x.path);
+    }
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    final d = Driver(
+      id: widget.driver?.id,
+      firstName: _fn.text.trim(),
+      lastName: _ln.text.trim(),
+      plateNumber: _plate.text.trim(),
+      phone: _phone.text.trim(),
+      notes: _notes.text.trim(),
+      photoPath: _photo,
+      carPhotoPath: _carPhoto,
+      hidePhone: _hidePhone,
+      rating: _rating,
+      isFavorite: _isFav,
+    );
+    if (d.id == null) {
+      await DatabaseHelper.instance.insert(d);
+    } else {
+      await DatabaseHelper.instance.update(d);
+    }
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+            title: Text(
+                widget.driver == null ? 'إضافة سائق' : 'تعديل سائق')),
+        body: Form(
+          key: _formKey,
+          child: ListView(padding: const EdgeInsets.all(16), children: [
+            Row(children: [
+              _photoTile('صورة السائق', _photo, () => _pick(true)),
+              const SizedBox(width: 16),
+              _photoTile('صورة السيارة', _carPhoto, () => _pick(false)),
+            ]),
+            const SizedBox(height: 16),
+            TextFormField(
+                controller: _fn,
+                decoration: const InputDecoration(
+                    labelText: 'الاسم', border: OutlineInputBorder()),
+                validator: (v) => v!.isEmpty ? 'مطلوب' : null),
+            const SizedBox(height: 12),
+            TextFormField(
+                controller: _ln,
+                decoration: const InputDecoration(
+                    labelText: 'الشهرة', border: OutlineInputBorder())),
+            const SizedBox(height: 12),
+            TextFormField(
+                controller: _plate,
+                decoration: const InputDecoration(
+                    labelText: 'رقم اللوحة', border: OutlineInputBorder()),
+                validator: (v) => v!.isEmpty ? 'مطلوب' : null),
+            const SizedBox(height: 12),
+            TextFormField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                    labelText: 'رقم الهاتف', border: OutlineInputBorder()),
+                validator: (v) => v!.isEmpty ? 'مطلوب' : null),
+            SwitchListTile(
+                title: const Text('إخفاء الرقم عند المشاركة'),
+                value: _hidePhone,
+                onChanged: (v) => setState(() => _hidePhone = v)),
+            const SizedBox(height: 8),
+            const Text('تقييم السائق'),
+            Slider(
+                value: _rating,
+                max: 5,
+                divisions: 10,
+                label: _rating.toStringAsFixed(1),
+                onChanged: (v) => setState(() => _rating = v)),
+            SwitchListTile(
+                title: const Text('إضافة للمفضلة'),
+                value: _isFav,
+                onChanged: (v) => setState(() => _isFav = v)),
+            TextFormField(
+                controller: _notes,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                    labelText: 'ملاحظات', border: OutlineInputBorder())),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+                onPressed: _save,
+                icon: const Icon(Icons.save),
+                label: const Text('حفظ')),
+          ]),
+        ),
+      );
+
+  Widget _photoTile(String label, String? path, VoidCallback onTap) =>
+      Expanded(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 120,
+            decoration: BoxDecoration(
+                border: Border.all(), borderRadius: BorderRadius.circular(12)),
+            child: path == null
+                ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    const Icon(Icons.camera_alt, size: 40),
+                    Text(label)
+                  ])
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(File(path),
+                        fit: BoxFit.cover, width: double.infinity)),
+          ),
+        ),
+      );
+}
+
+lib/screens/drivers_list_screens.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
