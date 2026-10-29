@@ -1,3 +1,66 @@
+Lib/models/driver.dart
+class Driver {
+  int? id;
+  String firstName;
+  String lastName;
+  String? photoPath;
+  String? carPhotoPath;
+  String plateNumber;
+  String phone;
+  bool hidePhone;
+  double rating;
+  bool isFavorite;
+  String? notes;
+  DateTime createdAt;
+
+  Driver({
+    this.id,
+    required this.firstName,
+    required this.lastName,
+    this.photoPath,
+    this.carPhotoPath,
+    required this.plateNumber,
+    required this.phone,
+    this.hidePhone = false,
+    this.rating = 0,
+    this.isFavorite = false,
+    this.notes,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  String get fullName => '$firstName $lastName';
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'firstName': firstName,
+        'lastName': lastName,
+        'photoPath': photoPath,
+        'carPhotoPath': carPhotoPath,
+        'plateNumber': plateNumber,
+        'phone': phone,
+        'hidePhone': hidePhone ? 1 : 0,
+        'rating': rating,
+        'isFavorite': isFavorite ? 1 : 0,
+        'notes': notes,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory Driver.fromMap(Map<String, dynamic> m) => Driver(
+        id: m['id'],
+        firstName: m['firstName'],
+        lastName: m['lastName'],
+        photoPath: m['photoPath'],
+        carPhotoPath: m['carPhotoPath'],
+        plateNumber: m['plateNumber'],
+        phone: m['phone'],
+        hidePhone: m['hidePhone'] == 1,
+        rating: (m['rating'] as num).toDouble(),
+        isFavorite: m['isFavorite'] == 1,
+        notes: m['notes'],
+        createdAt: DateTime.parse(m['createdAt']),
+      );
+}
+
 <!-- Banner Image -->
 
 <p align="center">
