@@ -1,3 +1,33 @@
+lib/screen/about_screen.dart
+import 'package:flutter/material.dart';
+
+class AboutScreen extends StatelessWidget {
+  const AboutScreen({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('حول التطبيق')),
+        body: const Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.local_taxi, size: 80, color: Colors.indigo),
+                SizedBox(height: 16),
+                Text('دليل السائقين',
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text('الإصدار 1.0.0'),
+                SizedBox(height: 16),
+                Text(
+                    'تطبيق لإدارة بيانات السائقين، وحفظ صورهم ومعلوماتهم، '
+                    'ومشاركة بطاقة السائق مع العملاء مع خيار إخفاء رقم الهاتف.',
+                    style: TextStyle(height: 1.5)),
+              ]),
+        ),
+      );
+}
+
 lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'about_screen.dart';
