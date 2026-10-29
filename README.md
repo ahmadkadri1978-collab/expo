@@ -1,3 +1,122 @@
+lib/screen/share_card_screen.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import '../models/driver.dart';
+
+class ShareCardScreen extends StatefulWidget {
+  final Driver driver;
+  const ShareCardScreen({super.key, required this.driver});
+  @override
+  State<ShareCardScreen> createState() => _ShareCardScreenState();
+}
+
+class _ShareCardScreenState extends State<ShareCardScreen> {
+  final _sc = ScreenshotController();
+
+  Future<void> _share() async {
+    final bytes = await _sc.capture(pixelRatio: 2.0);
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/driver_${widget.driver.id}.png');
+    await file.writeAsBytes(bytes);
+    await Share.shareXFiles([XFile(file.path)],
+        text: 'بطاقة السائق: ${widget.driver.fullName}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.driver;
+    return Scaffold(
+      appBar: AppBar(title: const Text('بطاقة السائق')),
+      body: Column(children: [
+        Expanded(
+          child: Center(
+            child: Screenshot(
+              controller: _sc,
+              child: Container(
+                width: 320,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white,
+                      backgroundImage: d.photoPath != null
+                          ? FileImage(File(d.photoPath!))
+                          : null,
+                      child: d.photoPath == null
+                          ? const Icon(Icons.person,
+                              size: 60, color: Colors.indigo)
+                          : null),
+                  const SizedBox(height: 12),
+                  Text(d.fullName,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(
+                          5,
+                          (i) => Icon(
+                              i < d.rating.round()
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: Colors.amber,
+                              size: 20))),
+                  const SizedBox(height: 16),
+                  _cardLine(Icons.directions_car, 'اللوحة', d.plateNumber),
+                  _cardLine(Icons.phone, 'الهاتف',
+                      d.hidePhone ? 'الرقم مخفي' : d.phone),
+                  if (d.carPhotoPath != null) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(File(d.carPhotoPath!),
+                            height: 120, fit: BoxFit.cover)),
+                  ],
+                ]),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                  onPressed: _share,
+                  icon: const Icon(Icons.share),
+                  label: const Text('مشاركة البطاقة'))),
+        ),
+      ]),
+    );
+  }
+
+  Widget _cardLine(IconData icon, String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(children: [
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(width: 8),
+          Text('$label: ', style: const TextStyle(color: Colors.white70)),
+          Expanded(
+              child: Text(value,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold))),
+        ]),
+      );
+}
+
 lib/screen/srsh_screen.dart
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
