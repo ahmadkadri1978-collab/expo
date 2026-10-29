@@ -1,3 +1,76 @@
+libs/screens/drivers_list_screens.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import '../db/database_helper.dart';
+import '../models/driver.dart';
+import 'add_edit_driver_screen.dart';
+import 'driver_details_screen.dart';
+
+class DriversListScreen extends StatefulWidget {
+  const DriversListScreen({super.key});
+  @override
+  State<DriversListScreen> createState() => _DriversListScreenState();
+}
+
+class _DriversListScreenState extends State<DriversListScreen> {
+  List<Driver> _drivers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final data = await DatabaseHelper.instance.all();
+    if (mounted) setState(() => _drivers = data);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('السائقون')),
+        body: _drivers.isEmpty
+            ? const Center(child: Text('لا يوجد سائقون بعد'))
+            : ListView.builder(
+                itemCount: _drivers.length,
+                itemBuilder: (_, i) {
+                  final d = _drivers[i];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: d.photoPath != null
+                          ? FileImage(File(d.photoPath!))
+                          : null,
+                      child: d.photoPath == null
+                          ? Text(d.firstName.isNotEmpty ? d.firstName[0] : '?')
+                          : null,
+                    ),
+                    title: Text(d.fullName),
+                    subtitle: Text(
+                        '${d.plateNumber} • ⭐ ${d.rating.toStringAsFixed(1)}'),
+                    trailing: d.isFavorite
+                        ? const Icon(Icons.star, color: Colors.amber)
+                        : null,
+                    onTap: () async {
+                      await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => DriverDetailsScreen(driver: d)));
+                      _load();
+                    },
+                  );
+                },
+              ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () async {
+            await Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const AddEditDriverScreen()));
+            _load();
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('إضافة سائق'),
+        ),
+      );
+}
 Lib/screens/homes_screen.dart
 import 'package:flutter/material.dart';
 import 'drivers_list_screen.dart';
